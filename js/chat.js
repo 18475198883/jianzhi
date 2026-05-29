@@ -135,52 +135,79 @@ let isRecording = false;
 
 function startVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert('你的浏览器不支持语音输入'); return; }
-
-  if (!recognition) {
-    recognition = new SpeechRecognition();
-    recognition.lang = 'zh-CN';
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognition.onresult = (e) => {
-      let transcript = '';
-      for (let i = 0; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript;
-      }
-      document.getElementById('msgInput').value = transcript;
-    };
-    recognition.onerror = (e) => {
-      stopRecording();
-      if (e.error === 'no-speech') {
-        document.getElementById('msgInput').placeholder = '没有检测到语音，请重试';
-      } else if (e.error === 'aborted') {
-        document.getElementById('msgInput').placeholder = '说说今天吃了什么...';
-      } else {
-        document.getElementById('msgInput').placeholder = '语音识别失败，请手动输入';
-      }
-    };
-    recognition.onend = () => {
-      stopRecording();
-    };
+  if (!SpeechRecognition) {
+    document.getElementById('msgInput').placeholder = '当前浏览器不支持语音，请手动输入';
+    return;
   }
 
   if (isRecording) {
-    recognition.stop();
-  } else {
-    recognition.start();
+    recognition && recognition.stop();
+    return;
+  }
+
+  // 每次新建实例，避免移动端复用导致的状态错乱
+  recognition = new SpeechRecognition();
+  recognition.lang = 'zh-CN';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onstart = () => {
     isRecording = true;
-    document.getElementById('voiceBtn').textContent = '🔴点击停止';
-    document.getElementById('voiceBtn').style.background = '#ef4444';
-    document.getElementById('voiceBtn').style.color = '#fff';
-    document.getElementById('msgInput').placeholder = '正在聆听...';
+    const btn = document.getElementById('voiceBtn');
+    btn.textContent = '🔴 点击停止';
+    btn.style.background = '#ef4444';
+    btn.style.color = '#fff';
+    document.getElementById('msgInput').placeholder = '正在聆听...请说话';
+  };
+
+  recognition.onresult = (e) => {
+    let transcript = '';
+    for (let i = 0; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    document.getElementById('msgInput').value = transcript;
+    document.getElementById('msgInput').placeholder = '识别中...';
+  };
+
+  recognition.onspeechend = () => {
+    document.getElementById('msgInput').placeholder = '正在处理语音...';
+  };
+
+  recognition.onerror = (e) => {
+    stopRecording();
+    const map = {
+      'no-speech': '没有检测到语音，请再试一次',
+      'aborted': '已取消',
+      'audio-capture': '未检测到麦克风',
+      'not-allowed': '请允许浏览器使用麦克风权限',
+      'network': '语音识别需要网络连接',
+      'service-not-allowed': '语音服务不可用，请手动输入'
+    };
+    document.getElementById('msgInput').placeholder =
+      (map[e.error] || '语音识别失败，请手动输入');
+  };
+
+  recognition.onend = () => {
+    stopRecording();
+    if (!document.getElementById('msgInput').value) {
+      document.getElementById('msgInput').placeholder = '未识别到文字，请重试或手动输入';
+    }
+  };
+
+  try {
+    recognition.start();
+  } catch (e) {
+    stopRecording();
+    document.getElementById('msgInput').placeholder = '语音启动失败，请手动输入';
   }
 }
 
 function stopRecording() {
   isRecording = false;
-  document.getElementById('voiceBtn').textContent = '🎤语音';
-  document.getElementById('voiceBtn').style.background = '';
-  document.getElementById('voiceBtn').style.color = '';
+  const btn = document.getElementById('voiceBtn');
+  btn.textContent = '🎤语音';
+  btn.style.background = '';
+  btn.style.color = '';
 }
 
 /* === 快捷模板 === */
