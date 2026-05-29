@@ -64,6 +64,7 @@
     <div style="margin-bottom:12px">
       <label style="font-size:13px;color:var(--text-secondary)">DeepSeek API Key</label>
       <input type="password" class="input" id="apiKeyInput" name="apikey" placeholder="sk-..." autocomplete="new-password">
+        <div id="setupError" style="color:#ef4444;font-size:12px;margin-top:4px;display:none"></div>
       <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Key 仅存本地，不上传任何服务器</div>
       <button class="btn btn-outline btn-sm" id="testKeyBtn" style="margin-top:6px" onclick="testKey()">测试连接</button>
       <span id="testKeyResult" style="font-size:12px;margin-left:8px"></span>

@@ -275,6 +275,7 @@ function openSetup() {
 }
 
 function closeSetup() {
+  document.getElementById("setupError").style.display = "none";
   document.getElementById('setupModal').classList.remove('active');
   // 如果还没配置Key，在页面显示引导
   if (!ok || !getConfig().deepseekKey) {
@@ -292,8 +293,8 @@ function saveSetup() {
   const startWeight = +document.getElementById('setupWeight').value;
   const targetWeight = +document.getElementById('setupTarget').value;
 
-  if (!key) { alert('请输入 API Key'); return; }
-  if (!key.startsWith('sk-')) { alert('API Key 格式错误，DeepSeek Key 应以 sk- 开头'); return; }
+  if (!key) { document.getElementById('setupError').textContent = '请输入 API Key'; document.getElementById('setupError').style.display = 'block'; return; }
+  if (!key.startsWith('sk-')) { document.getElementById('setupError').textContent = 'API Key 格式错误，应以 sk- 开头'; document.getElementById('setupError').style.display = 'block'; return; }
 
   const bmr = calcBMR(startWeight, height, age, gender);
   const tdee = calcTDEE(bmr, 'sedentary');
@@ -309,7 +310,7 @@ function saveSetup() {
 
   // 验证保存成功
   if (!ok || !getConfig().deepseekKey) {
-    alert('配置保存失败，请检查浏览器存储空间是否充足。');
+    document.getElementById('setupError').textContent = '保存失败，请检查浏览器存储空间'; document.getElementById('setupError').style.display = 'block';
     return;
   }
 
