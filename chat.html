@@ -44,7 +44,7 @@
       <button class="btn btn-outline btn-sm" onclick="openDashboard()">📊看板</button>
     </div>
     <div class="input-row">
-      <input type="text" class="input" id="msgInput" placeholder="说说今天吃了什么..." autocomplete="off">
+      <input type="text" class="input" id="msgInput" name="chatmsg" placeholder="说说今天吃了什么..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
       <button class="btn btn-primary btn-icon" onclick="sendMessage()" id="sendBtn" style="flex-shrink:0">➤</button>
     </div>
     <div style="text-align:center;margin-top:4px">
@@ -58,9 +58,12 @@
 <div class="modal-overlay" id="setupModal">
   <div class="modal">
     <div class="modal-header">首次设置</div>
+      <!-- 隐藏表单域，防止浏览器密码管理器自动填充 -->
+      <input type="text" style="display:none" autocomplete="username">
+      <input type="password" style="display:none" autocomplete="current-password">
     <div style="margin-bottom:12px">
       <label style="font-size:13px;color:var(--text-secondary)">DeepSeek API Key</label>
-      <input type="password" class="input" id="apiKeyInput" placeholder="sk-...">
+      <input type="password" class="input" id="apiKeyInput" name="apikey" placeholder="sk-..." autocomplete="new-password">
       <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Key 仅存本地，不上传任何服务器</div>
       <button class="btn btn-outline btn-sm" id="testKeyBtn" style="margin-top:6px" onclick="testKey()">测试连接</button>
       <span id="testKeyResult" style="font-size:12px;margin-left:8px"></span>

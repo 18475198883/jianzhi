@@ -140,10 +140,7 @@ function startVoice() {
     return;
   }
 
-  if (isRecording) {
-    recognition && recognition.stop();
-    return;
-  }
+  if (isRecording) { recognition && recognition.stop(); stopRecording(); return; }
 
   // 每次新建实例，避免移动端复用导致的状态错乱
   recognition = new SpeechRecognition();
