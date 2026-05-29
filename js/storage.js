@@ -139,8 +139,17 @@ function getConfig() { return read(STORAGE_KEYS.config) || getDefaultConfig(); }
 function saveConfig(config) {
   const existing = getConfig();
   const merged = { ...existing, ...config };
-  write(STORAGE_KEYS.config, merged);
-  return merged;
+  if (!write(STORAGE_KEYS.config, merged)) {
+    console.error('保存配置失败：localStorage写入错误');
+    return false;
+  }
+  // 验证写入
+  const verify = read(STORAGE_KEYS.config);
+  if (!verify || !verify.deepseekKey) {
+    console.error('保存配置失败：写入验证不通过，回退重试');
+    write(STORAGE_KEYS.config, merged);
+  }
+  return true;
 }
 
 function updateConfigField(path, value) {

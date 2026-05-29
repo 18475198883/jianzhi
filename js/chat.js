@@ -280,7 +280,7 @@ function openSetup() {
 function closeSetup() {
   document.getElementById('setupModal').classList.remove('active');
   // 如果还没配置Key，在页面显示引导
-  if (!getConfig().deepseekKey) {
+  if (!ok || !getConfig().deepseekKey) {
     if (!document.getElementById('chatArea').innerHTML.includes('配置 API Key')) {
       appendBubble('ai', '点击右上角⚙️配置 API Key 和身体数据后，才能开始使用哦～');
     }
@@ -311,7 +311,7 @@ function saveSetup() {
   });
 
   // 验证保存成功
-  if (!getConfig().deepseekKey) {
+  if (!ok || !getConfig().deepseekKey) {
     alert('配置保存失败，请检查浏览器存储空间是否充足。');
     return;
   }
