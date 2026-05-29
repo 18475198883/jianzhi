@@ -14,9 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
 function initChat() {
   updateHeader();
   updateCalorieCard();
+
+  // 恢复最近聊天记录
+  const history = getChatHistory();
+  if (history.length) {
+    history.slice(-30).forEach(m => appendBubble(m.role, m.content));
+  }
+
   const gapAlert = getGapAlertMessage();
   if (gapAlert) {
     appendBubble('ai', gapAlert.reply, true);
+    addChatMessage('ai', gapAlert.reply);
   }
   document.getElementById('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -123,6 +131,8 @@ async function handleImageUpload(event) {
 
 /* === 语音输入 === */
 let recognition = null;
+let isRecording = false;
+
 function startVoice() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) { alert('你的浏览器不支持语音输入'); return; }
@@ -130,18 +140,47 @@ function startVoice() {
   if (!recognition) {
     recognition = new SpeechRecognition();
     recognition.lang = 'zh-CN';
-    recognition.interimResults = false;
+    recognition.interimResults = true;
+    recognition.continuous = false;
     recognition.onresult = (e) => {
-      document.getElementById('msgInput').value = e.results[0][0].transcript;
-      document.getElementById('voiceBtn').textContent = '🎤语音';
+      let transcript = '';
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
+      document.getElementById('msgInput').value = transcript;
     };
-    recognition.onerror = () => {
-      document.getElementById('voiceBtn').textContent = '🎤语音';
+    recognition.onerror = (e) => {
+      stopRecording();
+      if (e.error === 'no-speech') {
+        document.getElementById('msgInput').placeholder = '没有检测到语音，请重试';
+      } else if (e.error === 'aborted') {
+        document.getElementById('msgInput').placeholder = '说说今天吃了什么...';
+      } else {
+        document.getElementById('msgInput').placeholder = '语音识别失败，请手动输入';
+      }
+    };
+    recognition.onend = () => {
+      stopRecording();
     };
   }
 
-  document.getElementById('voiceBtn').textContent = '⏺录音中...';
-  recognition.start();
+  if (isRecording) {
+    recognition.stop();
+  } else {
+    recognition.start();
+    isRecording = true;
+    document.getElementById('voiceBtn').textContent = '🔴点击停止';
+    document.getElementById('voiceBtn').style.background = '#ef4444';
+    document.getElementById('voiceBtn').style.color = '#fff';
+    document.getElementById('msgInput').placeholder = '正在聆听...';
+  }
+}
+
+function stopRecording() {
+  isRecording = false;
+  document.getElementById('voiceBtn').textContent = '🎤语音';
+  document.getElementById('voiceBtn').style.background = '';
+  document.getElementById('voiceBtn').style.color = '';
 }
 
 /* === 快捷模板 === */
@@ -213,6 +252,12 @@ function openSetup() {
 
 function closeSetup() {
   document.getElementById('setupModal').classList.remove('active');
+  // 如果还没配置Key，在页面显示引导
+  if (!getConfig().deepseekKey) {
+    if (!document.getElementById('chatArea').innerHTML.includes('配置 API Key')) {
+      appendBubble('ai', '点击右上角⚙️配置 API Key 和身体数据后，才能开始使用哦～');
+    }
+  }
 }
 
 function saveSetup() {
@@ -230,13 +275,19 @@ function saveSetup() {
   const tdee = calcTDEE(bmr, 'sedentary');
   const dailyCals = Math.round(tdee - 400);
 
-  saveConfig({
+  const ok = saveConfig({
     deepseekKey: key,
     profile: { gender, age, height, startWeight, targetWeight },
     plan: { dailyCalories: dailyCals, proteinG: Math.round(startWeight * 1.6), workoutWeekday: '40-60min', workoutWeekend: '90min+' },
     startDate: today(),
     phase: '适应期'
   });
+
+  // 验证保存成功
+  if (!getConfig().deepseekKey) {
+    alert('配置保存失败，请检查浏览器存储空间是否充足。');
+    return;
+  }
 
   addWeightRecord({ date: today(), weight: startWeight, bodyFat: null, bmi: calcBMI(startWeight, height), source: 'manual', note: '初始体重' });
 
