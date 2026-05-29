@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>减脂管家</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page" id="chatPage">
+  <div class="header">
+    <div>
+      <div class="header-title">减脂管家</div>
+      <div class="header-subtitle" id="headerInfo">加载中...</div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="openSetup()">⚙️</button>
+  </div>
+
+  <div class="card-row" style="padding:0 12px">
+    <div class="card" id="calorieCard">
+      <div style="font-size:12px;color:var(--text-secondary)">今日剩余</div>
+      <div style="font-size:22px;font-weight:700" id="remainingCal">— kcal</div>
+    </div>
+    <div class="card" id="phaseCard">
+      <div style="font-size:12px;color:var(--text-secondary)">阶段</div>
+      <div style="font-size:16px;font-weight:600" id="phaseLabel">适应期</div>
+    </div>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="bubble bubble-ai animate-in">
+      你好！我是你的减脂管家。先点击右上角⚙️配置 API Key 和身体数据吧～
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="toolbar">
+      <button class="btn btn-outline btn-sm" onclick="quickTemplate()">⚡快捷</button>
+      <button class="btn btn-outline btn-sm" onclick="triggerImageUpload()">📷拍照</button>
+      <button class="btn btn-outline btn-sm" id="voiceBtn" onclick="startVoice()">🎤语音</button>
+      <button class="btn btn-outline btn-sm" onclick="openDashboard()">📊看板</button>
+    </div>
+    <div class="input-row">
+      <input type="text" class="input" id="msgInput" placeholder="说说今天吃了什么..." autocomplete="off">
+      <button class="btn btn-primary btn-icon" onclick="sendMessage()" id="sendBtn" style="flex-shrink:0">➤</button>
+    </div>
+    <div style="text-align:center;margin-top:4px">
+      <a href="javascript:openFeedback()" style="font-size:11px;color:var(--text-secondary);text-decoration:none">反馈 / 功能升级</a>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(event)">
+
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <div class="modal-header">首次设置</div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:13px;color:var(--text-secondary)">DeepSeek API Key</label>
+      <input type="password" class="input" id="apiKeyInput" placeholder="sk-...">
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">Key 仅存本地，不上传任何服务器</div>
+      <button class="btn btn-outline btn-sm" id="testKeyBtn" style="margin-top:6px" onclick="testKey()">测试连接</button>
+      <span id="testKeyResult" style="font-size:12px;margin-left:8px"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div><label style="font-size:12px;color:var(--text-secondary)">性别</label><select class="input" id="setupGender"><option value="男">男</option><option value="女">女</option></select></div>
+      <div><label style="font-size:12px;color:var(--text-secondary)">年龄</label><input type="number" class="input" id="setupAge" value="30"></div>
+      <div><label style="font-size:12px;color:var(--text-secondary)">身高(cm)</label><input type="number" class="input" id="setupHeight" value="165"></div>
+      <div><label style="font-size:12px;color:var(--text-secondary)">当前体重(kg)</label><input type="number" class="input" id="setupWeight" value="70" step="0.1"></div>
+      <div><label style="font-size:12px;color:var(--text-secondary)">目标体重(kg)</label><input type="number" class="input" id="setupTarget" value="55" step="0.1"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveSetup()">开始减脂之旅</button>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:8px;text-align:center">
+      <a href="javascript:importDataPrompt()">从备份恢复数据</a> ·
+      <a href="dashboard.html">先看看示例数据</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="quickModal">
+  <div class="modal">
+    <div class="modal-header">快捷记录</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="quickTemplates"></div>
+    <button class="btn btn-outline" style="width:100%;margin-top:12px" onclick="closeQuick()">取消</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="feedbackModal">
+  <div class="modal">
+    <div class="modal-header">反馈 / 功能升级</div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:13px">类型</label>
+      <select class="input" id="fbType" style="margin-top:4px">
+        <option value="功能建议">功能建议</option>
+        <option value="Bug反馈">Bug 反馈</option>
+        <option value="新增图表">新增图表/数据项</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:13px">描述你的想法</label>
+      <textarea class="input" id="fbDesc" rows="3" style="margin-top:4px;border-radius:12px;resize:none" placeholder="例如：希望能看到每月对比图..."></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="generateFeedback()">生成升级请求并复制</button>
+    <div style="font-size:11px;color:var(--text-secondary);margin-top:8px;text-align:center">复制后请粘贴到 claude.ai 发送给 Claude</div>
+    <button class="btn btn-outline" style="width:100%;margin-top:4px" onclick="closeFeedback()">取消</button>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ai-logic.js"></script>
+<script src="js/chat.js"></script>
+</body>
+</html>

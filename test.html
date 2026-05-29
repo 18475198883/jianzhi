@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>减脂管家 — 功能测试</title>
+<style>
+body{font-family:monospace;max-width:700px;margin:20px auto;padding:0 16px;background:#1e293b;color:#e2e8f0}
+h2{color:#22c55e;margin-top:24px;border-bottom:1px solid #334155;padding-bottom:4px}
+.pass{color:#22c55e}.fail{color:#ef4444}.warn{color:#f59e0b}
+.result{margin:4px 0;font-size:13px}
+.section{margin:16px 0}.summary{background:#0f172a;padding:16px;border-radius:8px;margin:16px 0}
+</style>
+</head>
+<body>
+<h1>减脂管家 功能测试</h1>
+<div class="summary" id="summary"></div>
+<div id="results"></div>
+
+<!-- 仪表盘函数需要的 DOM 元素（测试桩） -->
+<div style="display:none">
+  <div id="progressPercent"></div>
+  <div id="progressDetail"></div>
+  <div id="statExercise"></div>
+  <div id="statCalories"></div>
+  <div id="statStreak"></div>
+  <div id="statTotalLoss"></div>
+  <div id="weightChart"></div>
+  <div id="calorieChart"></div>
+  <div id="exerciseCalendar"></div>
+  <div id="achievementWall"></div>
+  <div id="weeklySummary"></div>
+  <div id="dashSubtitle"></div>
+  <div id="privacyToggle"></div>
+  <div id="watermarkEl"></div>
+  <div id="privacyOptions"></div>
+  <div id="privacyModal"></div>
+  <div id="headerInfo"></div>
+  <div id="phaseLabel"></div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ai-logic.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/share.js"></script>
+
+<script>
+const output = document.getElementById('results');
+let passCount = 0, failCount = 0, warnCount = 0;
+
+function test(name, fn) {
+  try {
+    const result = fn();
+    if (result === true || result === undefined) {
+      output.innerHTML += `<div class="result pass">✅ ${name}</div>`;
+      passCount++;
+    } else {
+      output.innerHTML += `<div class="result fail">❌ ${name} — ${result}</div>`;
+      failCount++;
+    }
+  } catch(e) {
+    output.innerHTML += `<div class="result fail">❌ ${name} — ${e.message}</div>`;
+    failCount++;
+  }
+}
+
+function warn(name, msg) {
+  output.innerHTML += `<div class="result warn">⚠️ ${name} — ${msg}</div>`;
+  warnCount++;
+}
+
+// === 清除旧数据 ===
+clearAllData();
+
+output.innerHTML += '<h2>1. 工具函数 (utils.js)</h2>';
+
+test('today() 返回本地日期 YYYY-MM-DD', () => {
+  const t = today();
+  return /^\d{4}-\d{2}-\d{2}$/.test(t) ? true : `格式错误: ${t}`;
+});
+
+test('today() 与本地日期一致', () => {
+  const d = new Date();
+  const expected = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return today() === expected ? true : `today()=${today()} expected=${expected}`;
+});
+
+test('formatLocalDate() 正确格式化', () => {
+  const d = new Date(2026, 4, 27);
+  return formatLocalDate(d) === '2026-05-27' ? true : `得到: ${formatLocalDate(d)}`;
+});
+
+test('calcBMI() 计算正确', () => {
+  const bmi = calcBMI(70, 165);
+  return Math.abs(bmi - 25.7) < 0.1 ? true : `BMI=25.7 期望, 得到${bmi}`;
+});
+
+test('calcBMR() 男性公式正确', () => {
+  // Mifflin-St Jeor: 10*70 + 6.25*165 - 5*30 + 5 = 1586
+  const bmr = calcBMR(70, 165, 30, '男');
+  return bmr == 1586 ? true : `期望1586, 得到${bmr}`;
+});
+
+test('calcBMR() 女性公式正确', () => {
+  // Mifflin-St Jeor: 10*55 + 6.25*160 - 5*25 - 161 = 1264
+  const bmr = calcBMR(55, 160, 25, '女');
+  return bmr == 1264 ? true : `期望1264, 得到${bmr}`;
+});
+
+test('calcTDEE() 久坐', () => {
+  return calcTDEE(1586, 'sedentary') === 1903 ? true : `得到: ${calcTDEE(1586, 'sedentary')}`;
+});
+
+test('daysBetween() 正确', () => {
+  return daysBetween('2026-05-01', '2026-05-08') === 7 ? true : `得到: ${daysBetween('2026-05-01', '2026-05-08')}`;
+});
+
+test('lastNDates() 返回正确天数', () => {
+  const dates = lastNDates(7);
+  return dates.length === 7 ? true : `得到${dates.length}个`;
+});
+
+test('fmtKcal() 格式化', () => fmtKcal(500) === '500 kcal' ? true : `得到: ${fmtKcal(500)}`);
+test('fmtKg() 格式化', () => fmtKg(69.5) === '69.5kg' ? true : `得到: ${fmtKg(69.5)}`);
+
+output.innerHTML += '<h2>2. 数据层 (storage.js)</h2>';
+
+test('初始无体重记录', () => getWeightRecords().length === 0 ? true : `有${getWeightRecords().length}条`);
+
+test('addWeightRecord() 添加成功', () => {
+  addWeightRecord({ date: '2026-05-20', weight: 70, bodyFat: 27, bmi: 25.7, source: 'manual', note: '初始' });
+  return getWeightRecords().length === 1 ? true : `有${getWeightRecords().length}条`;
+});
+
+test('addWeightRecord() 同一天覆盖', () => {
+  addWeightRecord({ date: '2026-05-20', weight: 69.8 });
+  return getWeightRecords()[0].weight === 69.8 ? true : `体重=${getWeightRecords()[0].weight}`;
+});
+
+test('getLatestWeight() 返回最新', () => {
+  addWeightRecord({ date: '2026-05-25', weight: 69.2 });
+  addWeightRecord({ date: '2026-05-28', weight: 68.8 });
+  const latest = getLatestWeight();
+  return latest.weight === 68.8 ? true : `得到${latest.weight}`;
+});
+
+test('addDietRecord() 添加饮食', () => {
+  addDietRecord({ date: today(), meal: '午餐', time: '12:30', content: '麻辣烫', calories: 520, protein: 28, carbs: 45, fat: 22 });
+  addDietRecord({ date: today(), meal: '晚餐', time: '19:00', content: '清蒸鱼+青菜', calories: 450, protein: 35, carbs: 50, fat: 12 });
+  return getDietRecords().length === 2 ? true : `有${getDietRecords().length}条`;
+});
+
+test('getTodayTotalCalories() 计算正确', () => {
+  return getTodayTotalCalories() === 970 ? true : `得到${getTodayTotalCalories()}`;
+});
+
+test('getTodayRemainingCalories()', () => {
+  saveConfig({ plan: { dailyCalories: 1600 } });
+  return getTodayRemainingCalories() === 630 ? true : `得到${getTodayRemainingCalories()}`;
+});
+
+test('addExerciseRecord() 添加运动', () => {
+  addExerciseRecord({ date: today(), type: '快走', duration: 45, calories: 320 });
+  return getExerciseRecords().length === 1 ? true : `有${getExerciseRecords().length}条`;
+});
+
+test('getConfig() 有默认值', () => {
+  const c = getConfig();
+  return c.profile.height === 165 ? true : `身高=${c.profile.height}`;
+});
+
+test('saveConfig() + updateConfigField()', () => {
+  saveConfig({ deepseekKey: 'sk-test123', profile: { gender: '男', age: 30, height: 165, startWeight: 70, targetWeight: 55 }, startDate: '2026-05-20', phase: '适应期' });
+  updateConfigField('phase', '减脂期');
+  return getConfig().phase === '减脂期' ? true : `阶段=${getConfig().phase}`;
+});
+
+test('dataExport() + dataImport() 往返', () => {
+  const exported = dataExport();
+  clearAllData();
+  dataImport(exported);
+  return getWeightRecords().length === 3 ? true : `恢复后${getWeightRecords().length}条`;
+});
+
+test('getLastRecordDate()', () => {
+  return getLastRecordDate() === today() ? true : `得到${getLastRecordDate()}`;
+});
+
+output.innerHTML += '<h2>3. AI 逻辑层 (ai-logic.js)</h2>';
+
+test('buildSystemPrompt() 不报错且包含关键内容', () => {
+  const prompt = buildSystemPrompt();
+  if (!prompt.includes('减脂管家')) return '缺少角色名';
+  if (!prompt.includes('165cm')) return '缺少身高';
+  if (!prompt.includes('55kg')) return '缺少目标体重';
+  if (!prompt.includes('心理教练')) return '缺少八大模块';
+  if (!prompt.includes('麻辣烫')) return '缺少外卖策略';
+  if (!prompt.includes('饮食替换')) return '缺少饮食替换';
+  return true;
+});
+
+test('parseAIResponse() 解析正确JSON', () => {
+  const json = '{"reply":"你好","action":{"type":"log_diet","data":{"meal":"午餐","calories":500}},"alerts":[],"mood":"positive"}';
+  const parsed = parseAIResponse(json);
+  if (parsed.reply !== '你好') return `reply=${parsed.reply}`;
+  if (parsed.action.type !== 'log_diet') return `action=${parsed.action.type}`;
+  if (parsed.mood !== 'positive') return `mood=${parsed.mood}`;
+  return true;
+});
+
+test('parseAIResponse() JSON解析失败时降级', () => {
+  const parsed = parseAIResponse('抱歉，我无法回答');
+  return parsed.reply === '抱歉，我无法回答' && parsed.action.type === 'none' ? true : `reply=${parsed.reply}`;
+});
+
+test('parseAIResponse() 处理markdown包裹的JSON', () => {
+  const parsed = parseAIResponse('```json\n{"reply":"好","action":{"type":"none","data":{}},"alerts":[],"mood":"neutral"}\n```');
+  return parsed.reply === '好' ? true : `reply=${parsed.reply}`;
+});
+
+test('buildMessages() 构建消息列表', () => {
+  const msgs = buildMessages('今天吃了鸡胸肉沙拉');
+  if (msgs[0].role !== 'system') return '第一条不是system';
+  if (msgs[msgs.length-1].role !== 'user') return '最后一条不是user';
+  if (msgs[msgs.length-1].content !== '今天吃了鸡胸肉沙拉') return '内容不匹配';
+  return true;
+});
+
+test('executeAction() log_diet', () => {
+  const before = getDietRecords().length;
+  executeAction({ type: 'log_diet', data: { meal: '午餐', content: '测试', calories: 400, protein: 30, carbs: 40, fat: 15 } });
+  return getDietRecords().length === before + 1 ? true : `before=${before} after=${getDietRecords().length}`;
+});
+
+test('executeAction() log_weight', () => {
+  const before = getWeightRecords().length;
+  executeAction({ type: 'log_weight', data: { weight: 68.5, bodyFat: 25.5, note: '早起空腹' } });
+  return getWeightRecords().length === before + 1 ? true : `before=${before} after=${getWeightRecords().length}`;
+});
+
+test('getGapAlertMessage() 今天有记录则返回null', () => {
+  return getGapAlertMessage() === null ? true : `返回了: ${getGapAlertMessage()?.reply}`;
+});
+
+output.innerHTML += '<h2>4. 仪表盘 (dashboard.js)</h2>';
+
+test('updateProgress() 不报错', () => {
+  try { updateProgress(); return true; } catch(e) { return e.message; }
+});
+
+test('updateStats() 不报错', () => {
+  try { updateStats(); return true; } catch(e) { return e.message; }
+});
+
+test('renderAchievements() 不报错', () => {
+  try { renderAchievements(); return true; } catch(e) { return e.message; }
+});
+
+output.innerHTML += '<h2>5. 成就检测</h2>';
+
+test('checkAchievements() 3kg解锁', () => {
+  // addWeightRecord 内部会调用 checkAchievements 并保存到 config
+  clearAllData();
+  addWeightRecord({ date: '2026-01-01', weight: 73 });
+  addWeightRecord({ date: '2026-02-01', weight: 70 });
+  const earned = getConfig().achievements || [];
+  return earned.includes('first-3kg') ? true : `解锁: ${JSON.stringify(earned)}`;
+});
+
+test('checkAchievements() 负值不减重不报错', () => {
+  clearAllData();
+  addWeightRecord({ date: '2026-01-01', weight: 70 });
+  addWeightRecord({ date: '2026-02-01', weight: 72 });
+  const earned = getConfig().achievements || [];
+  return earned.length === 0 ? true : `不应解锁任何成就，实际: ${JSON.stringify(earned)}`;
+});
+
+test('getAchievementInfo() 返回正确', () => {
+  const info = getAchievementInfo('first-3kg');
+  return info.icon === '🥇' && info.name === '首减3公斤' ? true : `得到: ${JSON.stringify(info)}`;
+});
+
+output.innerHTML += '<h2>6. 分享页 (share.js)</h2>';
+
+test('TEMPLATES 六套模板都存在', () => {
+  const keys = Object.keys(TEMPLATES);
+  return keys.length === 6 && keys.includes('minimal') && keys.includes('cyber') ? true : `模板数=${keys.length}`;
+});
+
+// 恢复测试数据用于展示
+clearAllData();
+addWeightRecord({ date: '2026-05-01', weight: 70, bodyFat: 27, source: 'manual', note: '初始' });
+addWeightRecord({ date: '2026-05-08', weight: 69.2 });
+addWeightRecord({ date: '2026-05-15', weight: 68.5 });
+addWeightRecord({ date: '2026-05-22', weight: 67.8 });
+addWeightRecord({ date: '2026-05-28', weight: 67.0, bodyFat: 25.5 });
+addDietRecord({ date: today(), meal: '早餐', content: '鸡蛋+牛奶', calories: 205, protein: 18, carbs: 10, fat: 9 });
+addDietRecord({ date: today(), meal: '午餐', content: '麻辣烫', calories: 520, protein: 28, carbs: 45, fat: 22 });
+addExerciseRecord({ date: today(), type: '跑步', duration: 35, distance: 5.2, calories: 380 });
+saveConfig({ startDate: '2026-05-01', phase: '减脂期', achievements: ['first-3kg', 'exercise-10'] });
+
+// === 总结 ===
+document.getElementById('summary').innerHTML = `
+  <h3>测试结果</h3>
+  <div style="font-size:24px;margin:8px 0">
+    <span class="pass">✅ ${passCount}</span>
+    ${failCount > 0 ? `<span class="fail">❌ ${failCount}</span>` : ''}
+    ${warnCount > 0 ? `<span class="warn">⚠️ ${warnCount}</span>` : ''}
+  </div>
+  <div style="color:#94a3b8;font-size:13px">
+    ${failCount === 0 ? '全部核心功能测试通过！' : '存在失败项，需要修复。'}
+  </div>
+`;
+</script>
+</body>
+</html>

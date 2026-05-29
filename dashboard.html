@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+  <title>减脂看板</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+<body>
+<div class="page" id="dashPage">
+  <div class="header">
+    <div>
+      <div class="header-title">我的减脂看板</div>
+      <div class="header-subtitle" id="dashSubtitle"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-outline btn-sm" id="privacyToggle" onclick="togglePrivacy()">👁 隐私</button>
+      <a href="chat.html" class="btn btn-outline btn-sm">💬</a>
+    </div>
+  </div>
+
+  <div style="overflow-y:auto;flex:1;padding-bottom:24px">
+    <div class="card progress-ring">
+      <div class="ring-value" id="progressPercent">0%</div>
+      <div class="ring-label"><span id="progressDetail"></span></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="card"><div style="font-size:12px;color:var(--text-secondary)">本周运动</div><div style="font-size:22px;font-weight:700" id="statExercise">—</div></div>
+      <div class="card"><div style="font-size:12px;color:var(--text-secondary)">日均热量</div><div style="font-size:22px;font-weight:700" id="statCalories">—</div></div>
+      <div class="card"><div style="font-size:12px;color:var(--text-secondary)">连续打卡</div><div style="font-size:22px;font-weight:700" id="statStreak">—</div></div>
+      <div class="card"><div style="font-size:12px;color:var(--text-secondary)">累计减重</div><div style="font-size:22px;font-weight:700" id="statTotalLoss">—</div></div>
+    </div>
+
+    <div class="card"><div class="chart-container" id="weightChart"></div></div>
+    <div class="card"><div class="chart-container" id="calorieChart"></div></div>
+    <div class="card"><div class="chart-container" id="exerciseCalendar"></div></div>
+
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:8px">成就墙</div>
+      <div id="achievementWall" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:8px">本周分析</div>
+      <div id="weeklySummary" style="font-size:14px;color:var(--text-secondary);line-height:1.7"></div>
+    </div>
+
+    <div style="padding:12px;display:flex;gap:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="exportDataFile()">导出数据备份</button>
+      <button class="btn btn-outline" style="flex:1" onclick="openPrivacySettings()">隐私设置</button>
+    </div>
+    <div style="text-align:center;padding:4px 12px 24px">
+      <a href="share.html" class="btn btn-outline btn-sm" style="width:100%">📸 生成朋友圈海报</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="privacyModal">
+  <div class="modal">
+    <div class="modal-header">隐私设置 — 截图时隐藏哪些</div>
+    <div id="privacyOptions"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:12px" onclick="savePrivacySettings()">保存</button>
+  </div>
+</div>
+
+<div class="watermark" id="watermarkEl"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+  <title>我的减脂成果</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div class="header-title">我的减脂成果</div>
+    <div style="display:flex;gap:8px">
+      <select class="input" id="templateSelect" onchange="switchTemplate()" style="width:auto;padding:4px 8px;font-size:13px">
+        <option value="minimal">极简白底</option>
+        <option value="dark">暗黑质感</option>
+        <option value="warm">活力橙</option>
+        <option value="nature">自然绿</option>
+        <option value="cyber">赛博朋克</option>
+        <option value="japan">日系清新</option>
+      </select>
+      <a href="dashboard.html" class="btn btn-outline btn-sm">📊</a>
+    </div>
+  </div>
+
+  <div style="flex:1;overflow-y:auto;padding:12px" id="posterContainer"></div>
+
+  <div style="padding:12px;display:flex;gap:8px">
+    <button class="btn btn-outline btn-sm" onclick="selectMilestone('prev')">◀</button>
+    <button class="btn btn-primary" style="flex:1" onclick="alert('请使用手机系统截图功能截取海报区域，然后在相册中裁剪为长图即可发朋友圈')">📸 截图分享</button>
+    <button class="btn btn-outline btn-sm" onclick="selectMilestone('next')">▶</button>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/share.js"></script>
+</body>
+</html>
