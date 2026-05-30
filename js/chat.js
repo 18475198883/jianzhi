@@ -278,7 +278,7 @@ function closeSetup() {
   document.getElementById("setupError").style.display = "none";
   document.getElementById('setupModal').classList.remove('active');
   // 如果还没配置Key，在页面显示引导
-  if (!ok || !getConfig().deepseekKey) {
+  if (!getConfig().deepseekKey) {
     if (!document.getElementById('chatArea').innerHTML.includes('配置 API Key')) {
       appendBubble('ai', '点击右上角⚙️配置 API Key 和身体数据后，才能开始使用哦～');
     }
@@ -300,7 +300,7 @@ function saveSetup() {
   const tdee = calcTDEE(bmr, 'sedentary');
   const dailyCals = Math.round(tdee - 400);
 
-  const ok = saveConfig({
+  saveConfig({
     deepseekKey: key,
     profile: { gender, age, height, startWeight, targetWeight },
     plan: { dailyCalories: dailyCals, proteinG: Math.round(startWeight * 1.6), workoutWeekday: '40-60min', workoutWeekend: '90min+' },
@@ -308,8 +308,7 @@ function saveSetup() {
     phase: '适应期'
   });
 
-  // 验证保存成功
-  if (!ok || !getConfig().deepseekKey) {
+  if (!getConfig().deepseekKey) {
     document.getElementById('setupError').textContent = '保存失败，请检查浏览器存储空间'; document.getElementById('setupError').style.display = 'block';
     return;
   }
