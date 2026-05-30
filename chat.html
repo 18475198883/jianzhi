@@ -39,7 +39,7 @@
   <div class="bottom-bar">
     <div class="toolbar">
       <button class="btn btn-outline btn-sm" onclick="quickTemplate()">⚡快捷</button>
-      <button class="btn btn-outline btn-sm" onclick="triggerImageUpload()">📷拍照</button>
+      <button class="btn btn-outline btn-sm" onclick="triggerImageMenu()">📷拍照</button>
       <button class="btn btn-outline btn-sm" id="voiceBtn" onclick="startVoice()">🎤语音</button>
       <button class="btn btn-outline btn-sm" onclick="openDashboard()">📊看板</button>
     </div>
@@ -53,7 +53,17 @@
   </div>
 </div>
 
-<input type="file" id="imageInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(event)">
+<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="handleImageUpload(event)">
+<input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+
+<div class="modal-overlay" id="imageMenuModal">
+  <div class="modal">
+    <div class="modal-header">选择图片来源</div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="document.getElementById('cameraInput').click();closeImageMenu()">📷 拍照</button>
+    <button class="btn btn-outline" style="width:100%" onclick="document.getElementById('galleryInput').click();closeImageMenu()">🖼️ 从相册选择</button>
+    <button class="btn btn-outline btn-sm" style="width:100%;margin-top:4px" onclick="closeImageMenu()">取消</button>
+  </div>
+</div>
 
 <div class="modal-overlay" id="setupModal">
   <div class="modal">
@@ -75,6 +85,11 @@
       <div><label style="font-size:12px;color:var(--text-secondary)">身高(cm)</label><input type="number" class="input" id="setupHeight" value="165"></div>
       <div><label style="font-size:12px;color:var(--text-secondary)">当前体重(kg)</label><input type="number" class="input" id="setupWeight" value="70" step="0.1"></div>
       <div><label style="font-size:12px;color:var(--text-secondary)">目标体重(kg)</label><input type="number" class="input" id="setupTarget" value="55" step="0.1"></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:13px;color:var(--text-secondary)">减肥开始日期</label>
+      <input type="date" class="input" id="setupStartDate">
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">可从之前任意日期开始记录体重数据</div>
     </div>
     <button class="btn btn-primary" style="width:100%" onclick="saveSetup()">开始减脂之旅</button>
     <div style="font-size:11px;color:var(--text-secondary);margin-top:8px;text-align:center">

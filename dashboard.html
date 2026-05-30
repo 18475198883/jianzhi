@@ -48,12 +48,29 @@
     </div>
 
     <div style="padding:12px;display:flex;gap:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="openWeightRecordForm()">+ 添加体重</button>
       <button class="btn btn-outline" style="flex:1" onclick="exportDataFile()">导出数据备份</button>
       <button class="btn btn-outline" style="flex:1" onclick="openPrivacySettings()">隐私设置</button>
     </div>
     <div style="text-align:center;padding:4px 12px 24px">
       <a href="share.html" class="btn btn-outline btn-sm" style="width:100%">📸 生成朋友圈海报</a>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="weightRecordModal">
+  <div class="modal">
+    <div class="modal-header">添加体重记录</div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:13px">日期</label>
+      <input type="date" class="input" id="weightRecordDate">
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:13px">体重(kg)</label>
+      <input type="number" class="input" id="weightRecordValue" placeholder="73.4" step="0.1">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:4px" onclick="saveWeightRecord()">保存</button>
+    <button class="btn btn-outline btn-sm" style="width:100%" onclick="closeWeightRecordForm()">取消</button>
   </div>
 </div>
 

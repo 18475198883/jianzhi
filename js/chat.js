@@ -94,8 +94,16 @@ async function sendMessage() {
 }
 
 /* === 图片上传 === */
+function triggerImageMenu() {
+  document.getElementById('imageMenuModal').classList.add('active');
+}
+
+function closeImageMenu() {
+  document.getElementById('imageMenuModal').classList.remove('active');
+}
+
 function triggerImageUpload() {
-  document.getElementById('imageInput').click();
+  document.getElementById('cameraInput').click();
 }
 
 async function handleImageUpload(event) {
@@ -140,9 +148,13 @@ function startVoice() {
     return;
   }
 
-  if (isRecording) { recognition && recognition.stop(); stopRecording(); return; }
+  if (isRecording) {
+    if (recognition) recognition.stop();
+    return;
+  }
 
-  // 每次新建实例，避免移动端复用导致的状态错乱
+  let voiceText = '';
+
   recognition = new SpeechRecognition();
   recognition.lang = 'zh-CN';
   recognition.interimResults = true;
@@ -150,6 +162,7 @@ function startVoice() {
 
   recognition.onstart = () => {
     isRecording = true;
+    voiceText = '';
     const btn = document.getElementById('voiceBtn');
     btn.textContent = '🔴 点击停止';
     btn.style.background = '#ef4444';
@@ -158,12 +171,18 @@ function startVoice() {
   };
 
   recognition.onresult = (e) => {
-    let transcript = '';
+    let interim = '';
     for (let i = 0; i < e.results.length; i++) {
-      transcript += e.results[i][0].transcript;
+      const r = e.results[i];
+      if (r && r.length && r[0].transcript) {
+        if (r.isFinal) { voiceText += r[0].transcript; }
+        else { interim += r[0].transcript; }
+      }
     }
-    document.getElementById('msgInput').value = transcript;
-    document.getElementById('msgInput').placeholder = '识别中...';
+    const display = voiceText || interim;
+    if (display) {
+      document.getElementById('msgInput').value = display;
+    }
   };
 
   recognition.onspeechend = () => {
@@ -172,19 +191,23 @@ function startVoice() {
 
   recognition.onerror = (e) => {
     stopRecording();
-    const map = {
-      'no-speech': '没有检测到语音，请再试一次',
-      'aborted': '已取消',
-      'audio-capture': '未检测到麦克风',
-      'not-allowed': '请允许浏览器使用麦克风权限',
-      'network': '语音识别需要网络连接',
-      'service-not-allowed': '语音服务不可用，请手动输入'
-    };
-    document.getElementById('msgInput').placeholder =
-      (map[e.error] || '语音识别失败，请手动输入');
+    if (e.error === 'no-speech') {
+      document.getElementById('msgInput').placeholder = '没有检测到语音，请再试一次';
+    } else if (e.error === 'aborted') {
+      // 用户手动停止，正常情况
+    } else if (e.error === 'audio-capture') {
+      document.getElementById('msgInput').placeholder = '未检测到麦克风，请检查权限';
+    } else if (e.error === 'not-allowed') {
+      document.getElementById('msgInput').placeholder = '请允许浏览器使用麦克风权限';
+    } else {
+      document.getElementById('msgInput').placeholder = '语音识别失败，请手动输入';
+    }
   };
 
   recognition.onend = () => {
+    if (voiceText && !document.getElementById('msgInput').value) {
+      document.getElementById('msgInput').value = voiceText;
+    }
     stopRecording();
     if (!document.getElementById('msgInput').value) {
       document.getElementById('msgInput').placeholder = '未识别到文字，请重试或手动输入';
@@ -271,6 +294,7 @@ function openSetup() {
   document.getElementById('setupAge').value = config.profile.age;
   document.getElementById('setupWeight').value = config.profile.startWeight;
   document.getElementById('setupTarget').value = config.profile.targetWeight;
+  document.getElementById('setupStartDate').value = config.startDate || today();
   document.getElementById('setupModal').classList.add('active');
 }
 
@@ -292,6 +316,7 @@ function saveSetup() {
   const age = +document.getElementById('setupAge').value;
   const startWeight = +document.getElementById('setupWeight').value;
   const targetWeight = +document.getElementById('setupTarget').value;
+  const startDate = document.getElementById('setupStartDate').value || today();
 
   if (!key) { document.getElementById('setupError').textContent = '请输入 API Key'; document.getElementById('setupError').style.display = 'block'; return; }
   if (!key.startsWith('sk-')) { document.getElementById('setupError').textContent = 'API Key 格式错误，应以 sk- 开头'; document.getElementById('setupError').style.display = 'block'; return; }
@@ -304,7 +329,7 @@ function saveSetup() {
     deepseekKey: key,
     profile: { gender, age, height, startWeight, targetWeight },
     plan: { dailyCalories: dailyCals, proteinG: Math.round(startWeight * 1.6), workoutWeekday: '40-60min', workoutWeekend: '90min+' },
-    startDate: today(),
+    startDate: startDate,
     phase: '适应期'
   });
 
@@ -313,7 +338,7 @@ function saveSetup() {
     return;
   }
 
-  addWeightRecord({ date: today(), weight: startWeight, bodyFat: null, bmi: calcBMI(startWeight, height), source: 'manual', note: '初始体重' });
+  addWeightRecord({ date: startDate, weight: startWeight, bodyFat: null, bmi: calcBMI(startWeight, height), source: 'manual', note: '初始体重' });
 
   closeSetup();
   initChat();

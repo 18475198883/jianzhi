@@ -250,3 +250,32 @@ function exportDataFile() {
   a.href = url; a.download = `减脂数据_${today()}.json`; a.click();
   URL.revokeObjectURL(url);
 }
+
+/* === 手动体重记录 === */
+function openWeightRecordForm() {
+  document.getElementById('weightRecordDate').value = today();
+  document.getElementById('weightRecordValue').value = '';
+  document.getElementById('weightRecordModal').classList.add('active');
+}
+
+function closeWeightRecordForm() {
+  document.getElementById('weightRecordModal').classList.remove('active');
+}
+
+function saveWeightRecord() {
+  const date = document.getElementById('weightRecordDate').value;
+  const weight = +document.getElementById('weightRecordValue').value;
+  if (!date || !weight) { alert('请填写日期和体重'); return; }
+  const config = getConfig();
+  addWeightRecord({
+    date, weight,
+    bodyFat: null,
+    bmi: calcBMI(weight, config.profile.height),
+    source: 'manual',
+    note: '手动补充'
+  });
+  closeWeightRecordForm();
+  updateStats();
+  renderWeightChart();
+  updateProgress();
+}
