@@ -79,6 +79,11 @@
       <button class="btn btn-outline btn-sm" id="testKeyBtn" style="margin-top:6px" onclick="testKey()">测试连接</button>
       <span id="testKeyResult" style="font-size:12px;margin-left:8px"></span>
     </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:13px;color:var(--text-secondary)">智谱AI Key（图片识别用）</label>
+      <input type="password" class="input" id="visionKeyInput" name="visionkey" placeholder="可选，用于识别截图和照片" autocomplete="new-password">
+      <div style="font-size:11px;color:var(--text-secondary);margin-top:4px">免费注册：open.bigmodel.cn → API Keys → 复制key。不配置则无法识别图片</div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
       <div><label style="font-size:12px;color:var(--text-secondary)">性别</label><select class="input" id="setupGender"><option value="男">男</option><option value="女">女</option></select></div>
       <div><label style="font-size:12px;color:var(--text-secondary)">年龄</label><input type="number" class="input" id="setupAge" value="30"></div>

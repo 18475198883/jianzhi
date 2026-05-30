@@ -130,6 +130,8 @@ function getDefaultConfig() {
     phase: '适应期',
     startDate: today(),
     deepseekKey: '',
+    visionKey: '',
+    visionModel: 'glm-4v-flash',
     preferences: { dislikedExercises: [], preferredCuisine: [], responseStyle: 'data-driven', nickname: '', motivationStyle: 'gentle' }
   };
 }

@@ -15,7 +15,6 @@ function initChat() {
   updateHeader();
   updateCalorieCard();
 
-  // 恢复最近聊天记录
   const history = getChatHistory();
   if (history.length) {
     history.slice(-30).forEach(m => appendBubble(m.role, m.content));
@@ -26,6 +25,12 @@ function initChat() {
     appendBubble('ai', gapAlert.reply, true);
     addChatMessage('ai', gapAlert.reply);
   }
+
+  requestAnimationFrame(() => {
+    const area = document.getElementById('chatArea');
+    area.scrollTop = area.scrollHeight;
+  });
+
   document.getElementById('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
@@ -117,7 +122,7 @@ async function handleImageUpload(event) {
   try {
     const base64 = await fileToBase64(file);
     const messages = buildMessages('请识别这张图片。如果是体脂秤/运动App截图，请提取其中的数据并记录；如果是食物照片，请估算食物种类和热量。', base64);
-    const response = await callDeepSeekVision(messages, base64);
+    const response = await callVisionAI(messages, base64);
     const parsed = parseAIResponse(response);
 
     if (parsed.action && parsed.action.type !== 'none' && parsed.action.type !== 'query') {
@@ -290,6 +295,7 @@ function hideTyping() {
 function openSetup() {
   const config = getConfig();
   if (config.deepseekKey) document.getElementById('apiKeyInput').value = config.deepseekKey;
+  if (config.visionKey) document.getElementById('visionKeyInput').value = config.visionKey;
   document.getElementById('setupHeight').value = config.profile.height;
   document.getElementById('setupAge').value = config.profile.age;
   document.getElementById('setupWeight').value = config.profile.startWeight;
@@ -317,6 +323,7 @@ function saveSetup() {
   const startWeight = +document.getElementById('setupWeight').value;
   const targetWeight = +document.getElementById('setupTarget').value;
   const startDate = document.getElementById('setupStartDate').value || today();
+  const visionKey = document.getElementById('visionKeyInput').value.trim();
 
   if (!key) { document.getElementById('setupError').textContent = '请输入 API Key'; document.getElementById('setupError').style.display = 'block'; return; }
   if (!key.startsWith('sk-')) { document.getElementById('setupError').textContent = 'API Key 格式错误，应以 sk- 开头'; document.getElementById('setupError').style.display = 'block'; return; }
@@ -327,6 +334,7 @@ function saveSetup() {
 
   saveConfig({
     deepseekKey: key,
+    visionKey: visionKey,
     profile: { gender, age, height, startWeight, targetWeight },
     plan: { dailyCalories: dailyCals, proteinG: Math.round(startWeight * 1.6), workoutWeekday: '40-60min', workoutWeekend: '90min+' },
     startDate: startDate,
