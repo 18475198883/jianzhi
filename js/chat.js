@@ -17,19 +17,19 @@ function initChat() {
 
   const history = getChatHistory();
   if (history.length) {
-    history.slice(-30).forEach(m => appendBubble(m.role, m.content));
+    history.slice(-30).forEach(m => appendBubble(m.role, m.content, false, true));
   }
 
   const gapAlert = getGapAlertMessage();
   if (gapAlert) {
-    appendBubble('ai', gapAlert.reply, true);
+    appendBubble('ai', gapAlert.reply, true, true);
     addChatMessage('ai', gapAlert.reply);
   }
 
-  setTimeout(() => {
-    const area = document.getElementById('chatArea');
-    area.scrollTop = area.scrollHeight;
-  }, 500);
+  const area = document.getElementById('chatArea');
+  area.scrollTop = area.scrollHeight;
+  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 100);
+  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 300);
 
   document.getElementById('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -267,15 +267,13 @@ function closeQuick() {
 }
 
 /* === 聊天气泡 === */
-function appendBubble(role, text, isAlert) {
+function appendBubble(role, text, isAlert, skipAnim) {
   const area = document.getElementById('chatArea');
   const div = document.createElement('div');
-  div.className = `bubble bubble-${role} animate-in${isAlert ? ' alert' : ''}`;
+  div.className = `bubble bubble-${role}${skipAnim ? '' : ' animate-in'}${isAlert ? ' alert' : ''}`;
   div.textContent = text;
   area.appendChild(div);
-  requestAnimationFrame(() => {
-    area.scrollTop = area.scrollHeight;
-  });
+  area.scrollTop = area.scrollHeight;
 }
 
 function showTyping() {

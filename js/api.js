@@ -59,12 +59,19 @@ async function callVisionAI(messages, imageDataUrl) {
   if (!key) throw new Error('请先配置视觉AI的 API Key（智谱AI）');
 
   const lastMsg = messages[messages.length - 1];
+  const rawBase64 = imageDataUrl.includes('base64,') ? imageDataUrl.split('base64,')[1] : imageDataUrl;
   const content = [
-    { type: 'text', text: lastMsg.content },
-    { type: 'image_url', image_url: { url: imageDataUrl } }
+    { type: 'image_url', image_url: { url: rawBase64 } },
+    { type: 'text', text: lastMsg.content }
   ];
 
   const msgs = [...messages.slice(0, -1), { role: 'user', content }];
+
+  const body = {
+    model: config.visionModel || ZHIPU_VISION_MODEL,
+    messages: msgs,
+    max_tokens: 1500
+  };
 
   const resp = await fetchWithTimeout(ZHIPU_CHAT, {
     method: 'POST',
@@ -72,17 +79,17 @@ async function callVisionAI(messages, imageDataUrl) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${key}`
     },
-    body: JSON.stringify({
-      model: config.visionModel || ZHIPU_VISION_MODEL,
-      messages: msgs,
-      temperature: 0.3,
-      max_tokens: 1500
-    })
+    body: JSON.stringify(body)
   });
 
   if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || `视觉AI请求失败 (${resp.status})`);
+    const errText = await resp.text();
+    let errMsg = `视觉AI请求失败 (${resp.status})`;
+    try {
+      const err = JSON.parse(errText);
+      errMsg = err.error?.message || errMsg;
+    } catch {}
+    throw new Error(errMsg + (errText ? ' | ' + errText.substring(0, 200) : ''));
   }
 
   const data = await resp.json();
