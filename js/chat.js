@@ -26,10 +26,14 @@ function initChat() {
     addChatMessage('ai', gapAlert.reply);
   }
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     const area = document.getElementById('chatArea');
+    const bubbles = area.querySelectorAll('.bubble');
+    if (bubbles.length) {
+      bubbles[bubbles.length - 1].scrollIntoView({ block: 'end', behavior: 'instant' });
+    }
     area.scrollTop = area.scrollHeight;
-  });
+  }, 200);
 
   document.getElementById('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }

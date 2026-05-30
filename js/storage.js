@@ -131,7 +131,7 @@ function getDefaultConfig() {
     startDate: today(),
     deepseekKey: '',
     visionKey: '',
-    visionModel: 'glm-4v-flash',
+    visionModel: 'glm-4v',
     preferences: { dislikedExercises: [], preferredCuisine: [], responseStyle: 'data-driven', nickname: '', motivationStyle: 'gentle' }
   };
 }

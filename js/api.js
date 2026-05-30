@@ -7,7 +7,7 @@ const DEEPSEEK_MODEL = 'deepseek-chat';
 // 智谱AI 视觉模型（图片识别）
 const ZHIPU_BASE = 'https://open.bigmodel.cn/api/paas/v4';
 const ZHIPU_CHAT = ZHIPU_BASE + '/chat/completions';
-const ZHIPU_VISION_MODEL = 'glm-4v-flash';
+const ZHIPU_VISION_MODEL = 'glm-4v';
 
 /** 通用 fetch with timeout */
 async function fetchWithTimeout(url, options, timeoutMs = 30000) {
