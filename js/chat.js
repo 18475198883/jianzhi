@@ -28,12 +28,8 @@ function initChat() {
 
   setTimeout(() => {
     const area = document.getElementById('chatArea');
-    const bubbles = area.querySelectorAll('.bubble');
-    if (bubbles.length) {
-      bubbles[bubbles.length - 1].scrollIntoView({ block: 'end', behavior: 'instant' });
-    }
     area.scrollTop = area.scrollHeight;
-  }, 200);
+  }, 500);
 
   document.getElementById('msgInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
@@ -124,9 +120,9 @@ async function handleImageUpload(event) {
   isProcessing = true;
   showTyping();
   try {
-    const base64 = await fileToBase64(file);
-    const messages = buildMessages('请识别这张图片。如果是体脂秤/运动App截图，请提取其中的数据并记录；如果是食物照片，请估算食物种类和热量。', base64);
-    const response = await callVisionAI(messages, base64);
+    const dataUrl = await fileToBase64(file);
+    const messages = buildMessages('请识别这张图片。如果是体脂秤/运动App截图，请提取其中的数据并记录；如果是食物照片，请估算食物种类和热量。', dataUrl);
+    const response = await callVisionAI(messages, dataUrl);
     const parsed = parseAIResponse(response);
 
     if (parsed.action && parsed.action.type !== 'none' && parsed.action.type !== 'query') {
@@ -277,7 +273,9 @@ function appendBubble(role, text, isAlert) {
   div.className = `bubble bubble-${role} animate-in${isAlert ? ' alert' : ''}`;
   div.textContent = text;
   area.appendChild(div);
-  area.scrollTop = area.scrollHeight;
+  requestAnimationFrame(() => {
+    area.scrollTop = area.scrollHeight;
+  });
 }
 
 function showTyping() {

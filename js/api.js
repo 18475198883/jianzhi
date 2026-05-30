@@ -53,7 +53,7 @@ async function callDeepSeek(messages, options = {}) {
 }
 
 /** 调用视觉AI识别图片（智谱 GLM-4V） */
-async function callVisionAI(messages, imageBase64) {
+async function callVisionAI(messages, imageDataUrl) {
   const config = getConfig();
   const key = config.visionKey;
   if (!key) throw new Error('请先配置视觉AI的 API Key（智谱AI）');
@@ -61,7 +61,7 @@ async function callVisionAI(messages, imageBase64) {
   const lastMsg = messages[messages.length - 1];
   const content = [
     { type: 'text', text: lastMsg.content },
-    { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+    { type: 'image_url', image_url: { url: imageDataUrl } }
   ];
 
   const msgs = [...messages.slice(0, -1), { role: 'user', content }];
@@ -89,14 +89,29 @@ async function callVisionAI(messages, imageBase64) {
   return data.choices[0].message.content;
 }
 
-/** 将图片文件转换为 base64 */
+/** 将图片文件压缩并转为 base64 data URL */
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
-      const result = reader.result;
-      const base64 = result.split(',')[1];
-      resolve(base64);
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 1024;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => reject(new Error('图片加载失败'));
+      img.src = reader.result;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
